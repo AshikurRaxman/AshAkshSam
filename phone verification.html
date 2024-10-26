@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ashsamaks</title>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            background-color: #121212;
+            color: #ffffff;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+        }
+
+        .container {
+            text-align: center;
+        }
+
+        input {
+            padding: 10px;
+            margin: 10px;
+            border: 2px solid;
+            border-image: linear-gradient(45deg, #ff0000, #00ff00, #0000ff) 1;
+            background: transparent;
+            color: #ffffff;
+            font-size: 18px;
+        }
+
+        button {
+            padding: 10px 20px;
+            margin: 10px;
+            background: linear-gradient(45deg, #ff0000, #00ff00, #0000ff);
+            border: none;
+            color: #ffffff;
+            font-size: 18px;
+            cursor: pointer;
+        }
+
+        .theme-toggle {
+            position: absolute;
+            bottom: 10px;
+            right: 10px;
+        }
+
+        #toggle-theme {
+            background: #ffffff;
+            color: #000000;
+        }
+
+        .dark-theme {
+            background-color: #121212;
+            color: #ffffff;
+        }
+
+        .light-theme {
+            background-color: #ffffff;
+            color: #000000;
+        }
+    </style>
+    <script src="https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/11.0.1/firebase-analytics.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/11.0.1/firebase-auth.js"></script>
+    <script src="https://www.google.com/recaptcha/api.js" async defer></script>
+</head>
+<body>
+    <div class="container">
+        <h1>Ashsamaks</h1>
+        <div id="phone-number-container">
+            <input type="text" id="phone-number" placeholder="Phone Number">
+            <div id="recaptcha-container"></div>
+            <button id="send-otp">Send OTP</button>
+        </div>
+        <div id="otp-container" style="display: none;">
+            <input type="text" id="otp" placeholder="OTP">
+            <button id="verify-otp">Verify OTP</button>
+        </div>
+        <div class="theme-toggle">
+            <button id="toggle-theme">Toggle Theme</button>
+        </div>
+    </div>
+    <script>
+        // Firebase configuration
+        const firebaseConfig = {
+            apiKey: "AIzaSyCF47vfl5fXVHrheldaBkuTSke7RAPrGHQ",
+            authDomain: "ashes-are-articles.firebaseapp.com",
+            projectId: "ashes-are-articles",
+            storageBucket: "ashes-are-articles.appspot.com",
+            messagingSenderId: "846341430896",
+            appId: "1:846341430896:web:ef10fa98c8af8f88c35eb5",
+            measurementId: "G-3X8MTB6NKC"
+        };
+
+        // Initialize Firebase
+        const app = firebase.initializeApp(firebaseConfig);
+        const analytics = firebase.analytics();
+        const auth = firebase.auth();
+
+        // reCAPTCHA setup
+        window.recaptchaVerifier = new firebase.auth.RecaptchaVerifier('recaptcha-container', {
+            'size': 'invisible',
+            'callback': (response) => {
+                // reCAPTCHA solved, allow signInWithPhoneNumber.
+                onSignInSubmit();
+            }
+        });
+
+        document.getElementById('send-otp').addEventListener('click', () => {
+            const phoneNumber = document.getElementById('phone-number').value;
+            const appVerifier = window.recaptchaVerifier;
+
+            auth.signInWithPhoneNumber(phoneNumber, appVerifier)
+                .then((confirmationResult) => {
+                    window.confirmationResult = confirmationResult;
+                    document.getElementById('phone-number-container').style.display = 'none';
+                    document.getElementById('otp-container').style.display = 'block';
+                }).catch((error) => {
+                    console.error("Error during signInWithPhoneNumber", error);
+                });
+        });
+
+        document.getElementById('verify-otp').addEventListener('click', () => {
+            const otp = document.getElementById('otp').value;
+            window.confirmationResult.confirm(otp).then((result) => {
+                const user = result.user;
+                alert("Phone number verified!");
+            }).catch((error) => {
+                console.error("Error during OTP verification", error);
+            });
+        });
+
+        document.getElementById('toggle-theme').addEventListener('click', () => {
+            document.body.classList.toggle('light-theme');
+            document.body.classList.toggle('dark-theme');
+        });
+    </script>
+</body>
+</html>
